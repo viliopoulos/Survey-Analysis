@@ -1,0 +1,60 @@
+import pandas as pd
+df = pd.read_csv("cleaned_survey-1.csv", index_col=0)
+df.drop(['Expert'],axis=1,inplace=True)
+#df.drop(['Languages','Expert'],axis=1,inplace=True)
+
+pd.set_option('display.max_columns',None)
+df.head()
+
+<p>For each programming skill level, compute:</p>
+<ol>
+<li><b>PropPJC2</b>:the proportion (0 to 1, computed relatively to the group size) of people that know at least one among Python and Java and their Classification knowledge has to be at least 2. 
+<li><b>StdevClust</b>:the standard deviation of the Clustering knowledge (function <i>std</i>)
+</ol>
+<p>You should return one data frame with one row for each programming skill level and two columns named <b>PropPy_or_Java_and_Class2+</b> and <b>StdevClust</b>. Don't worry about having a Hierarchical Index for the columns.</p> 
+
+(pick the correct **PropPy_or_Java_and_Class2+** number for student with ProgSkills = 5 )
+
+df['PropPJC2']=((df.Python==1) | (df.Java==1)) & (df.Classification >=2)
+df.PropPJC2.head()
+
+df.groupby('ProgSkills').agg({'PropPJC2':'mean','Clustering':'std'})
+
+df.groupby('ProgSkills').agg({'PropPJC2':'mean','Clustering':'std'})\
+    .rename(columns={'PropPJC2':'PropPy_or_Java_and_Class2+','Clustering':'StdevClust'})
+
+For each program, how many people have a Programming Skill knowledge of less than 4? Report one row for each existing program. 
+
+(fill in the number of students for MBA and MSIS in a format of MBA_total/MSIS_total. For example : 10/23 )
+
+df['Prog4Minus']= df.ProgSkills < 4
+
+df.Prog4Minus.head()
+
+df.groupby('Program')['Prog4Minus'].sum()
+
+### For each Job, return the rows of those people who, within their group, know the most Languages.
+
+df.groupby('Job').apply(lambda d : d[d.Languages == d.Languages.max()])
+len(df.groupby('Job').apply(lambda d : d[d.Languages == d.Languages.max()]))
+
+###Let us define the "data science experience" of a given person as the person's largest score among Regression, Classification, and Clustering. Compute the average data science experience among all MSIS students.
+
+df_MSIS = df[df.Program=='MSIS']
+df_MSIS.head()
+
+df_MSIS.loc[:,['Regression','Clustering','Classification']].max()
+df_MSIS.loc[:,['Regression','Clustering','Classification']].max(axis=1).head(5)
+df_MSIS['data science experience']=df_MSIS.loc[:,['Regression','Clustering',\
+                                                  'Classification']].max(axis=1)
+df_MSIS.head()
+df_MSIS['data science experience'].mean()
+
+###Among those with at least one year elapsed from their Bachelor's degree, find out who is the "most knowledgeable" person. The most knowledgeable person is the one who knows Classification best (in case of ties, consider whether they know C, then CPP, then CS, then Java, then SAS). Retrieve that person's Program information. 
+
+df_Bach1to5Plus = df[df.Bach_0to1 != 1]
+df_Bach1to5Plus.sort_values(by=['Classification','C','CPP','CS','Java','SAS']\
+                        ,ascending=False).head()
+most_knowledge_person = df_Bach1to5Plus.sort_values(by=['Classification','C','CPP','CS','Java','SAS']\
+                        ,ascending=False).head(1)
+most_knowledge_person.Program.values[0]
